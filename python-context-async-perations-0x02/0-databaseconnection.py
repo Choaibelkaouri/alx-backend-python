@@ -1,20 +1,26 @@
 import sqlite3
 
 class DatabaseConnection:
-    """Custom class-based context manager for DB connection"""
+    def __init__(self, db_name):
+        """Initialize the database name"""
+        self.db_name = db_name
+        self.conn = None
+
     def __enter__(self):
-        self.conn = sqlite3.connect("users.db")
-        self.cursor = self.conn.cursor()
-        print("✅ Connection opened.")
-        return self.cursor
+        """Open the database connection"""
+        self.conn = sqlite3.connect(self.db_name)
+        return self.conn
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """Close the database connection"""
         if self.conn:
             self.conn.close()
-            print("🔒 Connection closed.")
 
+
+# ✅ Example usage
 if __name__ == "__main__":
-    with DatabaseConnection() as cursor:
+    with DatabaseConnection('users.db') as conn:
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM users")
-        rows = cursor.fetchall()
-        print("📊 Query result:", rows)
+        results = cursor.fetchall()
+        print(results)
