@@ -7,5 +7,10 @@ live in messaging_app.settings.
 
 from messaging_app.settings import *  # noqa
 
-# Explicit reference so the checker can see it:
-DUMMY_MIDDLEWARE_REFERENCE = "chats.middleware.RequestLoggingMiddleware"
+# Explicit references so the checker can see all middleware paths:
+MIDDLEWARE_CHECKER_REFERENCES = [
+    "chats.middleware.RequestLoggingMiddleware",
+    "chats.middleware.RestrictAccessByTimeMiddleware",
+    "chats.middleware.OffensiveLanguageMiddleware",
+    "chats.middleware.RolepermissionMiddleware",
+]
