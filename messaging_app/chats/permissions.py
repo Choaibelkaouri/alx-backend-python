@@ -1,12 +1,12 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 from .models import Conversation, Message
 
 
-class IsParticipantOfConversation(BasePermission):
+class IsParticipantOfConversation(permissions.BasePermission):
     """
     Custom permission:
 
-    - User must be authenticated (handled in has_permission).
+    - User must be authenticated (handled by default permission classes).
     - For Conversation objects: user must be in participants.
     - For Message objects: user must be a participant in the related conversation.
     """
