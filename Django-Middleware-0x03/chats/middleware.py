@@ -1,3 +1,34 @@
+from datetime import datetime
+
+
+class RequestLoggingMiddleware:
+    """
+    Middleware that logs each user's request to the requests.log file.
+
+    Log format:
+        f"{datetime.now()} - User: {user} - Path: {request.path}"
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.log_file = "requests.log"
+
+    def __call__(self, request):
+        # get username or AnonymousUser
+        user = getattr(request, "user", None)
+        if user is None or not getattr(user, "is_authenticated", False):
+            user = "AnonymousUser"
+
+        # EXACT format requested in the task
+        line = f"{datetime.now()} - User: {user} - Path: {request.path}\n"
+
+        # append to requests.log
+        with open(self.log_file, "a", encoding="utf-8") as f:
+            f.write(line)
+
+        response = self.get_response(request)
+        return response
+
 from datetime import datetime, timedelta
 from collections import defaultdict, deque
 
