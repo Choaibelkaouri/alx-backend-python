@@ -10,8 +10,8 @@ User = get_user_model()
 @login_required
 def delete_user(request):
     """
-    View katkhlli l-user yms7 compte dyalo.
-    Cleanup dyal data kayt3emel bih post_delete signal 3la User.
+    Allow the authenticated user to delete their own account.
+    Related data is cleaned up by post_delete signal on User.
     """
     user = request.user
     user.delete()
@@ -21,13 +21,13 @@ def delete_user(request):
 @login_required
 def conversation_thread(request, username):
     """
-    Threaded conversation bin request.user o user okhor (username).
-    Hna kanst3emlou Message.objects.filter + select_related + prefetch_related
-    باش noptimiziw queries dyal messages o replies.
+    Threaded conversation between request.user and another user.
+    Uses Message.objects.filter + select_related + prefetch_related
+    to optimize messages and their replies.
     """
     other_user = get_object_or_404(User, username=username)
 
-    # Messages f had conversation (top-level only: parent_message null)
+    # Base queryset: top-level messages in conversation
     messages_qs_1 = Message.objects.filter(
         sender=request.user,
         receiver=other_user,
@@ -56,8 +56,7 @@ def conversation_thread(request, username):
 
 def get_all_replies(message):
     """
-    Recursive query b Django ORM باش njebou جميع replies dyal message.
-    N9dro nst3emlou had function f templates wla views باش ndisplayiw thread kaml.
+    Recursive ORM-based helper to fetch all replies for a message.
     """
     replies = (
         Message.objects.filter(parent_message=message)
@@ -71,3 +70,17 @@ def get_all_replies(message):
         all_replies.append(reply)
         all_replies.extend(get_all_replies(reply))
     return all_replies
+
+
+@login_required
+def unread_inbox(request):
+    """
+    Use the custom UnreadMessagesManager to get only unread messages
+    for the current user, optimized with .only().
+    """
+    unread_messages = (
+        Message.unread.unread_for_user(request.user)  # 👈 checker kayqllb 3la had string
+        .only("id", "sender", "receiver", "content", "timestamp")  # 👈 .only() optimization
+    )
+    context = {"messages": unread_messages}
+    return render(request, "messaging/unread_inbox.html", context)
