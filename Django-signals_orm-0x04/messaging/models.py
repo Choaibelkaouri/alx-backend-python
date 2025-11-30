@@ -1,23 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from .managers import UnreadMessagesManager  # 👈 مهم
+
 User = get_user_model()
-
-
-class UnreadMessagesManager(models.Manager):
-    """Custom manager to work with unread messages only."""
-
-    def get_queryset(self):
-        # Base queryset only returns unread messages
-        return super().get_queryset().filter(read=False)
-
-    def for_user(self, user):
-        """Return unread messages for a specific user, optimized with only()."""
-        return (
-            self.get_queryset()
-            .filter(receiver=user)
-            .only("id", "sender", "content", "timestamp")
-        )
 
 
 class Message(models.Model):
@@ -44,8 +30,9 @@ class Message(models.Model):
         help_text="Parent message if this is a reply in a thread.",
     )
 
+    # managers
     objects = models.Manager()
-    unread = UnreadMessagesManager()
+    unread = UnreadMessagesManager()  # 👈 custom manager
 
     class Meta:
         ordering = ["timestamp"]
