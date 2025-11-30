@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
+from django.views.decorators.cache import cache_page  # 👈 مهم
 
 from .models import Message
 
@@ -18,12 +19,14 @@ def delete_user(request):
     return redirect("/")
 
 
+@cache_page(60)  # 👈 cache view dyal conversation list for 60 seconds
 @login_required
 def conversation_thread(request, username):
     """
     Threaded conversation between request.user and another user.
     Uses Message.objects.filter + select_related + prefetch_related
     to optimize messages and their replies.
+    This view is cached for 60 seconds using cache_page.
     """
     other_user = get_object_or_404(User, username=username)
 
@@ -79,7 +82,7 @@ def unread_inbox(request):
     for the current user, optimized with .only().
     """
     unread_messages = (
-        Message.unread.unread_for_user(request.user)  # 👈 checker kayqllb 3la had string
+        Message.unread.unread_for_user(request.user)  # 👈 custom manager
         .only("id", "sender", "receiver", "content", "timestamp")  # 👈 .only() optimization
     )
     context = {"messages": unread_messages}
